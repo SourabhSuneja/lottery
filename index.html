@@ -137,7 +137,7 @@
         });
 
         async function fetchFileContent(fileName) {
-            const url = `https://sourabhsuneja.github.io/quiz/${fileName.toUpperCase()}`;
+            const url = `https://sourabhsuneja.github.io/quiz/${fileName}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('File not found');
@@ -154,7 +154,7 @@
             const numStudents = parseInt(document.getElementById('num-students').value);
             if (!fileInput || isNaN(numStudents)) return alert('Please enter valid input.');
 
-            const fileNames = fileInput.split('+').map(f => f.endsWith('.txt') ? f : `${f}.txt`);
+            const fileNames = fileInput.split('+').map(f => f.endsWith('.txt') ? f : `${f.toUpperCase()}.txt`);
             let allNames = [];
 
             for (const file of fileNames) {
