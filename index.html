@@ -22,15 +22,15 @@
             height: 100vh;
             padding: 20px;
             color: #333;
-            overflow: hidden; /* To prevent body from overflowing */
+            overflow: hidden;
         }
 
         .container {
             text-align: center;
             width: 100%;
             max-width: 600px;
-            max-height: 90vh; /* Limit the height of the container */
-            overflow-y: auto; /* Add vertical scrolling if content overflows */
+            max-height: 85vh;
+            overflow-y: auto;
             padding: 20px;
             background-color: white;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
@@ -57,7 +57,7 @@
             color: #555;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], textarea {
             padding: 10px;
             width: 100%;
             margin: 10px 0;
@@ -68,9 +68,14 @@
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus, input[type="number"]:focus {
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
             border-color: #2980b9;
             outline: none;
+        }
+
+        textarea {
+            display: none;
+            height: 100px;
         }
 
         button {
@@ -135,16 +140,30 @@
         <label for="num-sets">How many sets of students:</label>
         <input type="number" id="num-sets" min="1" placeholder="Number of sets (defaults to 1)" required>
 
+        <label>
+            <input type="checkbox" id="assign-topic-toggle"> Assign random topics
+        </label>
+
+        <textarea id="topics-box" placeholder="Enter one topic per line..."></textarea>
+
         <button onclick="fetchStudentNames()">Pick Students</button>
 
         <div class="result" id="result"></div>
     </div>
 
     <script>
-        // Event listener for Enter key press
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 fetchStudentNames();
+            }
+        });
+
+        document.getElementById('assign-topic-toggle').addEventListener('change', function() {
+            const topicsBox = document.getElementById('topics-box');
+            if (this.checked) {
+                topicsBox.style.display = 'block';
+            } else {
+                topicsBox.style.display = 'none';
             }
         });
 
@@ -165,15 +184,24 @@
             const fileInput = document.getElementById('files').value.trim();
             const numStudents = parseInt(document.getElementById('num-students').value) || 1;
             const numSets = parseInt(document.getElementById('num-sets').value) || 1;
+            const assignTopics = document.getElementById('assign-topic-toggle').checked;
+            const topicsInput = document.getElementById('topics-box').value.trim().split('\n').filter(Boolean);
 
             if (!fileInput || isNaN(numStudents) || isNaN(numSets)) return alert('Please enter valid input.');
 
-            const fileNames = fileInput.split('+').map(f => f.endsWith('.txt') ? f : `${f.toUpperCase()}.txt`);
             let allNames = [];
 
-            for (const file of fileNames) {
-                const names = await fetchFileContent(file);
-                allNames = allNames.concat(names);
+            if (fileInput.includes(',')) {
+                // Handle comma-separated student names
+                allNames = fileInput.split(',').map(name => name.trim()).filter(Boolean);
+            } else {
+                // Treat input as file names
+                const fileNames = fileInput.split('+').map(f => f.endsWith('.txt') ? f : `${f.toUpperCase()}.txt`);
+                
+                for (const file of fileNames) {
+                    const names = await fetchFileContent(file);
+                    allNames = allNames.concat(names);
+                }
             }
 
             if (allNames.length < numStudents * numSets) {
@@ -183,6 +211,9 @@
 
             const shuffledNames = shuffleArray(allNames);
             const sets = createSets(shuffledNames, numStudents, numSets);
+            if (assignTopics) {
+                assignRandomTopics(sets, topicsInput);
+            }
             displaySets(sets);
         }
 
@@ -202,6 +233,20 @@
                 sets.push(set);
             }
             return sets;
+        }
+
+        function assignRandomTopics(sets, topics) {
+            const topicPool = topics.length > 0 ? shuffleArray(topics) : [];
+            let topicIndex = 0;
+
+            sets.forEach(set => {
+                set.forEach((student, index) => {
+                    if (topicPool.length > 0) {
+                        set[index] = `${student} - Topic: ${topicPool[topicIndex]}`;
+                        topicIndex = (topicIndex + 1) % topicPool.length;
+                    }
+                });
+            });
         }
 
         function displaySets(sets) {
