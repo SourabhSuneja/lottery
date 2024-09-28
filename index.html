@@ -129,8 +129,15 @@
     </div>
 
     <script>
+        // Event listener for Enter key press
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                fetchStudentNames();
+            }
+        });
+
         async function fetchFileContent(fileName) {
-            const url = `https://sourabhsuneja.github.io/quiz/${fileName}`;
+            const url = `https://sourabhsuneja.github.io/quiz/${fileName.toUpperCase()}`;
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('File not found');
