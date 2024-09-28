@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Easily select random students from your class. Enter class name and number of students to pick. Ideal for engaging classroom activities!">
     <title>Random Student Picker</title>
     <style>
         * {
@@ -102,6 +103,13 @@
             font-weight: bold;
         }
 
+        .set-title {
+            margin-top: 20px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
         @keyframes appear {
             to {
                 opacity: 1;
@@ -121,8 +129,11 @@
         <label for="files">Enter class name (e.g. 6A1):</label>
         <input type="text" id="files" placeholder="Enter class name" required>
 
-        <label for="num-students">How many students to pick randomly:</label>
+        <label for="num-students">How many students to pick per set:</label>
         <input type="number" id="num-students" min="1" placeholder="Number of students" required>
+
+        <label for="num-sets">How many sets of students:</label>
+        <input type="number" id="num-sets" min="1" placeholder="Number of sets (defaults to 1)" required>
 
         <button onclick="fetchStudentNames()">Pick Students</button>
 
@@ -153,7 +164,9 @@
         async function fetchStudentNames() {
             const fileInput = document.getElementById('files').value.trim();
             const numStudents = parseInt(document.getElementById('num-students').value);
-            if (!fileInput || isNaN(numStudents)) return alert('Please enter valid input.');
+            const numSets = parseInt(document.getElementById('num-sets').value) || 1;
+
+            if (!fileInput || isNaN(numStudents) || isNaN(numSets)) return alert('Please enter valid input.');
 
             const fileNames = fileInput.split('+').map(f => f.endsWith('.txt') ? f : `${f.toUpperCase()}.txt`);
             let allNames = [];
@@ -163,34 +176,50 @@
                 allNames = allNames.concat(names);
             }
 
-            if (allNames.length < numStudents) {
-                alert('Not enough students to pick from.');
+            if (allNames.length < numStudents * numSets) {
+                alert('Not enough students to create the requested sets.');
                 return;
             }
 
-            const selectedNames = pickRandomNames(allNames, numStudents);
-            displayNames(selectedNames);
+            const shuffledNames = shuffleArray(allNames);
+            const sets = createSets(shuffledNames, numStudents, numSets);
+            displaySets(sets);
         }
 
-        function pickRandomNames(names, count) {
-            const result = [];
-            const shuffled = [...names];
+        function shuffleArray(array) {
+            const shuffled = [...array];
             for (let i = shuffled.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-            return shuffled.slice(0, count);
+            return shuffled;
         }
 
-        function displayNames(names) {
+        function createSets(names, studentsPerSet, numSets) {
+            const sets = [];
+            for (let i = 0; i < numSets; i++) {
+                const set = names.slice(i * studentsPerSet, (i + 1) * studentsPerSet);
+                sets.push(set);
+            }
+            return sets;
+        }
+
+        function displaySets(sets) {
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '';
-            names.forEach((name, index) => {
-                const nameElement = document.createElement('div');
-                nameElement.className = 'name';
-                nameElement.style.animationDelay = `${index * 0.3}s`; // delay for each name
-                nameElement.textContent = name;
-                resultDiv.appendChild(nameElement);
+            resultDiv.innerHTML = ''; // Clear previous result
+            sets.forEach((set, setIndex) => {
+                const setTitle = document.createElement('div');
+                setTitle.className = 'set-title';
+                setTitle.textContent = `Set ${setIndex + 1}`;
+                resultDiv.appendChild(setTitle);
+
+                set.forEach((name, index) => {
+                    const nameElement = document.createElement('div');
+                    nameElement.className = 'name';
+                    nameElement.style.animationDelay = `${index * 0.3}s`; // delay for each name
+                    nameElement.textContent = name;
+                    resultDiv.appendChild(nameElement);
+                });
             });
         }
     </script>
