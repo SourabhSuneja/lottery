@@ -255,7 +255,7 @@
             sets.forEach((set, setIndex) => {
                 const setTitle = document.createElement('div');
                 setTitle.className = 'set-title';
-                setTitle.textContent = `Set ${setIndex + 1}`;
+                setTitle.textContent = sets.length === 1 ? '' : `Set ${setIndex + 1}`;
                 resultDiv.appendChild(setTitle);
 
                 set.forEach((name, index) => {
