@@ -167,6 +167,43 @@
             }
         });
 
+function standardizeClassSection(input) {
+    // Roman numerals to Arabic numbers, prioritize larger numerals first
+    const romanToArabic = {
+        "XII": 12, "XI": 11, "X": 10, "IX": 9, "VIII": 8, "VII": 7,
+        "VI": 6, "V": 5, "IV": 4, "III": 3, "II": 2, "I": 1
+    };
+
+    // Trim spaces, remove hyphens, and collapse multiple spaces
+    input = input.trim().replace(/-/g, '').replace(/\s+/g, '');
+
+    // Convert Roman numerals to Arabic if the input starts with Roman numerals
+    for (const [roman, arabic] of Object.entries(romanToArabic)) {
+        const regex = new RegExp('^' + roman, 'i');  // Case-insensitive match
+        if (regex.test(input)) {
+            input = input.replace(regex, arabic);
+            break;
+        }
+    }
+
+    // Regular expression to capture the class (1-12), section (A, B, C), and optional numeric suffix (e.g., A1, A2)
+    const classMatch = input.match(/^(\d{1,2})([a-zA-Z]+)(\d*)$/);
+
+    if (classMatch) {
+        // classMatch[1] = class number (1 to 12)
+        // classMatch[2] = section (A, B, C)
+        // classMatch[3] = optional number (e.g., 1 in A1, B2)
+        const classNumber = classMatch[1];
+        const section = classMatch[2].toUpperCase();  // Ensure section letter(s) are uppercase
+        const suffix = classMatch[3] || '';  // Optional numeric suffix
+
+        return classNumber + section + suffix;
+    }
+
+    // If the input doesn't match the expected pattern, return an empty string
+    return '';
+}
+
         async function fetchFileContent(fileName) {
             const url = `https://sourabhsuneja.github.io/quiz/${fileName}`;
             try {
@@ -196,7 +233,7 @@
                 allNames = fileInput.split(',').map(name => name.trim()).filter(Boolean);
             } else {
                 // Treat input as file names
-                const fileNames = fileInput.split('+').map(f => f.endsWith('.txt') ? f : `${f.toUpperCase()}.txt`);
+                const fileNames = fileInput.split('+').map(f => f.endsWith('.txt') ? f : `${standardizeClassSection(f.toUpperCase())}.txt`);
                 
                 for (const file of fileNames) {
                     const names = await fetchFileContent(file);
