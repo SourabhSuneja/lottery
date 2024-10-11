@@ -149,6 +149,34 @@
              }
          });
          
+         function generateNumberRange(str) {
+         // Regular expression to match number ranges with hyphen (-, –, —)
+         const regex = /^\s*(\d+)\s*[\-–—]\s*(\d+)\s*$/;
+         
+         // Test the string with the regex
+         const match = str.match(regex);
+         
+         // If the pattern matches
+         if (match) {
+         let start = parseInt(match[1], 10); // First number (before the hyphen)
+         let end = parseInt(match[2], 10);   // Second number (after the hyphen)
+         
+         // If the start number is greater than the end, it's an invalid range
+         if (start > end) return false;
+         
+         // Generate an array from start to end
+         let range = [];
+         for (let i = start; i <= end; i++) {
+            range.push(i);
+         }
+         
+         return range;
+         }
+         
+         // If it doesn't match the pattern, return false
+         return false;
+         }
+         
          function standardizeClassSection(input) {
          // Roman numerals to Arabic numbers, prioritize larger numerals first
          const romanToArabic = {
@@ -210,7 +238,14 @@
          
              let allNames = [];
          
-             if (fileInput.includes(',')) {
+             // Generate a roll number range if the input follows a pattern like this 1-10
+             let numRange = generateNumberRange(fileInput)
+         
+            if(numRange) {
+                 allNames = numRange;       
+            }
+         
+             else if (fileInput.includes(',')) {
                  // Handle comma-separated student names
                  allNames = fileInput.split(',').map(name => name.trim()).filter(Boolean);
              } else {
